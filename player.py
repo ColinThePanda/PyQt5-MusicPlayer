@@ -15,17 +15,16 @@ from PyQt5.QtWidgets import (
     QListWidgetItem,
     QScrollBar,
     QSlider,
-    QSizePolicy
+    QSizePolicy,
 )
 from PyQt5.QtGui import QFont, QColor, QWheelEvent
 from pathlib import Path
+from playlists import get_music_folder
 
-def get_music_folder():
-    """Return the system's default music folder path."""
-    return os.path.join(Path.home(), "Music")
 
 def get_playlist_path(playlist):
-    return os.path.join(os.path.join(get_music_folder(), 'YtSongs'), playlist)
+    return os.path.join(get_music_folder(), playlist)
+
 
 def get_songs_list(playlist, music_folder=None):
     songs = []
@@ -33,9 +32,10 @@ def get_songs_list(playlist, music_folder=None):
 
     if os.path.exists(playlist_dir):
         for file in os.listdir(playlist_dir):
-            if file.lower().endswith(('.mp3', '.wav')):
+            if file.lower().endswith((".mp3", ".wav")):
                 songs.append(os.path.join(playlist_dir, file))
     return songs
+
 
 DARK_THEME = """
     QWidget {
@@ -107,14 +107,18 @@ DARK_THEME = """
     }
 """
 
+
 class ClickableSlider(QSlider):
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            val = self.minimum() + ((event.x() / self.width()) * (self.maximum() - self.minimum()))
+            val = self.minimum() + (
+                (event.x() / self.width()) * (self.maximum() - self.minimum())
+            )
             self.setValue(int(val))
             self.sliderMoved.emit(int(val))
             self.sliderPressed.emit()
         super().mousePressEvent(event)
+
 
 class MusicPlayerWindow(QWidget):
     def __init__(self, songs, playlist):
@@ -137,14 +141,14 @@ class MusicPlayerWindow(QWidget):
         self.title_label = QLabel("Music Player")
         self.title_label.setAlignment(Qt.AlignCenter)
         self.title_label.setFont(QFont("Arial", 18, QFont.Bold))
-        
+
         self.song_list = QListWidget()
         self.song_list.setFont(QFont("Arial", 12))
         self.song_list.setUniformItemSizes(True)
-        
+
         # Populate song list
         for song in songs:
-            item = QListWidgetItem(os.path.basename(song).rsplit('.', 1)[0])
+            item = QListWidgetItem(os.path.basename(song).rsplit(".", 1)[0])
             item.setSizeHint(QSize(-1, 40))
             self.song_list.addItem(item)
 
@@ -183,7 +187,7 @@ class MusicPlayerWindow(QWidget):
         control_layout.addWidget(self.progress_slider)
         control_layout.addWidget(self.total_duration_label)
 
-        #control_layout.addStretch()
+        # control_layout.addStretch()
         control_layout.addWidget(self.volume_label)
         control_layout.addWidget(self.volume_slider)
 
@@ -219,7 +223,9 @@ class MusicPlayerWindow(QWidget):
         delta = event.angleDelta().y()
         steps = delta / 120.0
         scroll_step = 1
-        new_value = self.song_list.verticalScrollBar().value() - int(round(steps * scroll_step))
+        new_value = self.song_list.verticalScrollBar().value() - int(
+            round(steps * scroll_step)
+        )
         snapped_value = round(new_value / scroll_step) * scroll_step
         self.song_list.verticalScrollBar().setValue(snapped_value)
         event.accept()
@@ -255,7 +261,11 @@ class MusicPlayerWindow(QWidget):
             current_time = self.media_player.time
             self.progress_slider.setValue(int(current_time))
             self.current_time_label.setText(self.format_time(current_time))
-        if not self.media_player.playing and not self.is_paused and self.current_song_index != -1:
+        if (
+            not self.media_player.playing
+            and not self.is_paused
+            and self.current_song_index != -1
+        ):
             old_index = self.current_song_index
             self.skip_song()
             if old_index != self.current_song_index:
@@ -266,7 +276,7 @@ class MusicPlayerWindow(QWidget):
             item = self.song_list.item(i)
             item.setBackground(QColor(26, 26, 26))
             item.setForeground(Qt.white)
-        
+
         if 0 <= self.current_song_index < self.song_list.count():
             current_item = self.song_list.item(self.current_song_index)
             current_item.setBackground(QColor(28, 87, 133))
@@ -278,9 +288,13 @@ class MusicPlayerWindow(QWidget):
         songs_lowercase = [song.lower() for song in self.songs]
         song_name = item.text().lower()
         try:
-            song_index = songs_lowercase.index((os.path.join(self.playlist, song_name).lower() + ".mp3").lower())
+            song_index = songs_lowercase.index(
+                (os.path.join(self.playlist, song_name).lower() + ".mp3").lower()
+            )
         except:
-            song_index = songs_lowercase.index((os.path.join(self.playlist, song_name).lower() + ".wav").lower())
+            song_index = songs_lowercase.index(
+                (os.path.join(self.playlist, song_name).lower() + ".wav").lower()
+            )
         try:
             self.current_song_index = song_index
             self.play_song(self.songs[song_index])
@@ -309,7 +323,7 @@ class MusicPlayerWindow(QWidget):
             self.progress_slider.setValue(0)
             self.current_time_label.setText("00:00")
             self.update_current_indicator()
-        
+
         self.media_player.push_handlers(on_eos)
         self.update_current_indicator()
 
@@ -348,11 +362,15 @@ class MusicPlayerWindow(QWidget):
             self.play_song(self.songs[self.current_song_index])
 
     def shuffle_playlist(self):
-        current_song = self.songs[self.current_song_index] if self.current_song_index != -1 else None
+        current_song = (
+            self.songs[self.current_song_index]
+            if self.current_song_index != -1
+            else None
+        )
         random.shuffle(self.songs)
         self.song_list.clear()
         for song in self.songs:
-            item = QListWidgetItem(os.path.basename(song).rsplit('.', 1)[0])
+            item = QListWidgetItem(os.path.basename(song).rsplit(".", 1)[0])
             item.setSizeHint(QSize(-1, 40))
             self.song_list.addItem(item)
         self.current_song_index = 0
@@ -361,12 +379,15 @@ class MusicPlayerWindow(QWidget):
     def set_volume(self, value):
         self.media_player.volume = value / 100.0
 
+
 def main():
     app = QApplication(sys.argv)
     songs = get_songs_list(get_music_folder())
     if not songs:
         print("No songs found in 'Songs' directory.")
-        msg = QLabel("No songs found in 'Songs' directory!\nCreate a 'Songs' folder with audio files.")
+        msg = QLabel(
+            "No songs found in 'Songs' directory!\nCreate a 'Songs' folder with audio files."
+        )
         msg.setStyleSheet("font-size: 16px; color: white;")
         msg.setAlignment(Qt.AlignCenter)
         msg.show()
@@ -375,6 +396,7 @@ def main():
         window = MusicPlayerWindow(songs)
         window.show()
         sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()

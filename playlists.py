@@ -1,4 +1,13 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QVBoxLayout, QPushButton, QListWidget, QListWidgetItem, QSlider
+from PyQt5.QtWidgets import (
+    QWidget,
+    QLabel,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QListWidget,
+    QListWidgetItem,
+    QSlider,
+)
 from PyQt5.QtGui import QFont, QColor, QWheelEvent
 from PyQt5.QtCore import pyqtSignal
 import sys
@@ -9,16 +18,16 @@ FONT_FAMILY = "Arial"
 TITLE_FONT_SIZE = 18
 LIST_FONT_SIZE = 12
 
+
 def get_playlist_list():
-    base_dir = get_base_dir()
+    base_dir = get_music_folder()
     return [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))]
+
 
 def get_music_folder():
     """Return the system's default music folder path."""
     return os.path.join(Path.home(), "Music")
 
-def get_base_dir():
-    return os.path.join(get_music_folder(), "YtSongs")
 
 DARK_THEME = """
     QWidget {
@@ -90,10 +99,11 @@ DARK_THEME = """
     }
 """
 
+
 class PlaylistWindow(QWidget):
     # Signal that emits the selected playlist name (a string)
     playlist_selected = pyqtSignal(str)
-    
+
     def __init__(self, playlists):
         super().__init__()
         self.setStyleSheet(DARK_THEME)
@@ -117,7 +127,7 @@ class PlaylistWindow(QWidget):
         for playlist in self.playlists:
             item = QListWidgetItem(playlist)
             self.playlist_list.addItem(item)
-    
+
     def on_playlist_clicked(self, item: QListWidgetItem):
         # Emit the selected playlist's name
         selected_playlist = item.text()
